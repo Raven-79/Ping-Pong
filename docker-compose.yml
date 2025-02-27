@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  game_service:
+    build:
+      context: ./backend
+      dockerfile: ./game/Dockerfile
+    depends_on:
+      my-postgres:
+        condition: service_healthy
+      manage_service:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - transcendence
+    volumes:
+      - ./backend:/app/
+
+  my-postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: mypassword
+    networks:
+      - transcendence
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata4:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  auth_service:
+    build:
+      context: ./backend
+      dockerfile: ./oauth2/Dockerfile
+    depends_on:
+      my-postgres:
+        condition: service_healthy
+      manage_service:
+        condition: service_healthy
+    networks:
+      - transcendence
+    volumes:
+      - ./backend:/app/
+
+  manage_service:
+    build:
+      context: ./backend
+      dockerfile: ./managing/Dockerfile
+    ports:
+      - "8001:8001"
+    depends_on:
+      my-postgres:
+        condition: service_healthy
+    networks:
+      - transcendence
+    volumes:
+      - ./backend:/app/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  nginx:
+    image: nginx:1test
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "8443:443"
+    depends_on:
+      - auth_service
+      - manage_service
+    volumes:
+      - ./frontend:/usr/share/nginx/www/
+      - /usr/share/nginx/www/node_modules
+    networks:
+      - transcendence
+
+networks:
+  transcendence:
+    driver: bridge
+
+volumes:
+  pgdata4:

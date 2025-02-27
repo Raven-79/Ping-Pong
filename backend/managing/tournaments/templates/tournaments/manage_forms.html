@@ -1,0 +1,83 @@
+<!-- templates/tournaments/manage_forms.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <ul>
+        {% for tournament in tournaments %}
+            <li>
+                {{ tournament.name }} - {{ tournament.participants.count }} / {{ tournament.max_players }} players
+                {% if tournament.participants.count < tournament.max_players %}
+                    <form method="post" action="{% url 'join_tournament' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="tournament_id" value="{{ tournament.id }}">
+                        <button type="submit">{{ button_text }}</button>
+                    </form>
+                {% else %}
+                    <span>(Tournament is full)</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form_type == 'tournament' %}
+            <label for="name">Tournament Name:</label>
+            <input type="text" id="name" name="name" required><br>
+
+            <label for="max_players">Select Number of Players:</label>
+            <select id="max_players" name="max_players" required>
+                <option value="4">4 Players</option>
+                <option value="8">8 Players</option>
+                <option value="16">16 Players</option>
+            </select>
+
+        {% elif form_type == 'join' %}
+            <label for="tournament">Select Tournament:</label>
+            <select id="tournament" name="tournament_id" required>
+                {% for tournament in tournaments %}
+                    <option value="{{ tournament.id }}">{{ tournament.name }}</option>
+                {% endfor %}
+            </select>
+
+        {% elif form_type == 'match' %}
+            <label for="tournament">Select Tournament:</label>
+            <select id="tournament" name="tournament" required>
+                {% for tournament in tournaments %}
+                    <option value="{{ tournament.id }}">{{ tournament.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="player1">Select Player 1:</label>
+            <select id="player1" name="player1" required>
+                {% for participant in participants %}
+                    <option value="{{ participant.id }}">{{ participant.user.username }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="player2">Select Player 2:</label>
+            <select id="player2" name="player2" required>
+                {% for participant in participants %}
+                    <option value="{{ participant.id }}">{{ participant.user.username }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="match_time">Match Time:</label>
+            <input type="datetime-local" id="match_time" name="match_time" required>
+        {% endif %}
+
+        <button type="submit">{{ button_text }}</button>
+    </form>
+
+    <hr>
+    <nav>
+        <a href="{% url 'create_tournament' %}">Create Tournament</a> |
+        <a href="{% url 'join_tournament' %}">Join Tournament</a> |
+        <a href="{% url 'create_match' %}">Create Match</a>
+    </nav>
+</body>
+</html>

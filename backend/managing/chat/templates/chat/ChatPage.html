@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        />
+        <title>WebSocket Test Page</title>
+        <script>
+            let socket
+            const onlineStatus = {}
+            let activeRoom = null
+            let activeChatUser = null
+            let userId = null
+            let username = ''
+
+            function sendMessage() {
+                const messageInput =
+                    document.getElementById('message-input')
+                const message = messageInput.value.trim()
+
+                if (message && socket && activeRoom) {
+                    socket.send(
+                        JSON.stringify({
+                            type: 'chat',
+                            message: message,
+                            room_name: activeRoom,
+                            receiver_id: activeChatUser,
+                        })
+                    )
+                    // Clear input field
+                    messageInput.value = ''
+
+                    // Display message locally
+                    displayMessage(username, message)
+                }
+            }
+            function displayMessage(sender, message) {
+                const chatBox =
+                    document.getElementById('chat-box')
+                const messageDiv = document.createElement('div')
+
+                if (sender === username) {
+                    // Styling for the current user's messages
+                    messageDiv.className = 'my-message'
+                    messageDiv.innerHTML = `<strong>You:</strong> ${message}`
+                } else {
+                    // Styling for the other user's messages
+                    messageDiv.className = 'their-message'
+                    messageDiv.innerHTML = `<strong>${sender}:</strong> ${message}`
+                }
+
+                chatBox.appendChild(messageDiv)
+                chatBox.scrollTop = chatBox.scrollHeight // Auto scroll to the bottom
+            }
+
+            function connect() {
+                // Create a new WebSocket connection
+                socket = new WebSocket(
+                    `ws://${window.location.host}/ws/chat/`
+                )
+
+                // Log connection success
+                socket.onopen = function (e) {
+                    console.log('WebSocket connected!')
+                }
+
+                // Handle incoming messages
+                socket.onmessage = function (e) {
+                    const data = JSON.parse(e.data)
+
+                    if (data.type === 'connected_users') {
+                        console.log(
+                            'Connected users:',
+                            data.connected_users
+                        )
+                        userId = data.user_id
+                        username = data.username
+                        markConnectedUsers(data.connected_users)
+                    }
+                    if (data.type === 'notification') {
+                        displayNotification(data.message)
+                    }
+                    if (data.type === 'user_status_update') {
+                        const userId = data.user_id
+                        const status = data.status
+                        console.log(
+                            `${data.username} is ${status}`
+                        )
+                        updateUserStatus(userId, status)
+                    }
+
+                    if (data.type === 'chat_message') {
+                        const sender = data.sender
+                        const message = data.message
+
+                        displayMessage(sender, message)
+                    }
+
+                    if (data.type === 'load_previous_messages') {
+                        // Load the previous messages into the chat box
+
+                        const messages = data.messages
+                        messages.reverse().forEach((msg) => {
+                            console.log({ Sender: msg.sender })
+
+                            displayMessage(
+                                msg.sender,
+                                msg.message
+                            )
+                        })
+                    }
+                }
+
+                socket.onclose = function (e) {
+                    console.log('WebSocket disconnected', e)
+                }
+
+                socket.onerror = function (e) {
+                    console.error('WebSocket error: ', e)
+                }
+            }
+
+            function disconnect() {
+                if (socket) {
+                    socket.close()
+                    initializeUserStatus()
+                }
+            }
+
+            function openChat(friendId) {
+                if (activeChatUser === friendId) return // If already chatting with the user, do nothing
+
+                // If already in a chat room, notify the backend that the user is leaving the current chat
+                if (activeChatUser !== null && socket) {
+                    socket.send(
+                        JSON.stringify({
+                            type: 'leave_chat',
+                            room_name: activeRoom,
+                        })
+                    )
+                }
+
+                // Clear chat
+                const chatBox =
+                    document.getElementById('chat-box')
+                chatBox.innerHTML = ''
+
+                // Update active chat user
+                activeChatUser = friendId
+
+                // Notify backend to join chat
+                if (socket) {
+                    const username = document.getElementById(
+                        `user-${friendId}`
+                    ).innerText
+                    displayNotification(`Chat with ${username}`)
+
+                    socket.send(
+                        JSON.stringify({
+                            type: 'join_chat',
+                            receiver_id: activeChatUser,
+                        })
+                    )
+                    activeRoom = `chat${Math.min(
+                        userId,
+                        activeChatUser
+                    )}_${Math.max(userId, activeChatUser)}`
+                }
+            }
+
+            function updateUserStatus(userId, status) {
+                const dotElement = document.getElementById(
+                    `status-dot-${userId}`
+                )
+                if (dotElement) {
+                    dotElement.style.backgroundColor =
+                        status === 'online' ? 'green' : 'grey'
+                    onlineStatus[userId] = status
+                }
+            }
+
+            function markConnectedUsers(connectedUsers) {
+                connectedUsers.forEach((userId) => {
+                    updateUserStatus(userId, 'online')
+                })
+            }
+
+            function initializeUserStatus() {
+                const users =
+                    document.querySelectorAll('.user-item')
+                users.forEach((user) => {
+                    const userId =
+                        user.getAttribute('data-user-id')
+                    updateUserStatus(userId, 'offline')
+                })
+            }
+
+            function displayNotification(message) {
+                console.log(message)
+                const notificationDiv = document.getElementById(
+                    'notification-box'
+                )
+                notificationDiv.innerHTML = `<p>${message}</p>`
+            }
+
+            function handleMessageInput(event) {
+                if (event.key === 'Enter') {
+                    sendMessage()
+                }
+            }
+
+            window.onload = function () {
+                initializeUserStatus()
+                connect()
+            }
+        </script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                height: 100vh;
+            }
+            .container {
+                display: flex;
+                width: 100%;
+            }
+            .user-list {
+                width: 25%;
+                border-right: 1px solid black;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+            .chat-room {
+                width: 75%;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+            .status-dot {
+                height: 10px;
+                width: 10px;
+                background-color: grey;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 8px;
+            }
+            .user-item {
+                cursor: pointer;
+                margin-bottom: 10px;
+            }
+            #notification-box {
+                border: 1px solid #ccc;
+                padding: 10px;
+                background-color: #f9f9f9;
+                margin-bottom: 10px;
+            }
+            #chat-box {
+                border: 1px solid #ccc;
+                height: 400px;
+                padding: 10px;
+                overflow-y: auto;
+            }
+            #message-input {
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+                margin-top: 10px;
+            }
+
+            .my-message {
+                text-align: right;
+                background-color: #e0ffe0;
+                padding: 5px;
+                margin: 5px;
+                border-radius: 10px;
+            }
+
+            .their-message {
+                text-align: left;
+                background-color: #f0f0f0;
+                padding: 5px;
+                margin: 5px;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="user-list">
+                <h1>WebSocket Connection Test</h1>
+                <button onclick="connect()">Connect</button>
+                <button onclick="disconnect()">
+                    Disconnect
+                </button>
+                <h2>Users List</h2>
+                <ul>
+                    <!-- Loop through the users passed from the backend -->
+                    {% for user in users %}
+                    <li
+                        class="user-item"
+                        data-user-id="{{ user.id }}"
+                        id="user-{{ user.id }}"
+                        onclick="openChat('{{ user.id }}')"
+                    >
+                        <span
+                            class="status-dot"
+                            id="status-dot-{{ user.id }}"
+                        ></span>
+                        {{ user.username }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="chat-room">
+                <div id="notification-box">
+                    <!-- Notifications will appear here -->
+                </div>
+                <h2>Chat Room</h2>
+                <div id="chat-box"></div>
+                <input
+                    type="text"
+                    id="message-input"
+                    placeholder="Type a message..."
+                    onkeydown="handleMessageInput(event)"
+                />
+                <button
+                    id="send-message-btn"
+                    onclick="sendMessage()"
+                >
+                    Send
+                </button>
+            </div>
+        </div>
+    </body>
+</html>

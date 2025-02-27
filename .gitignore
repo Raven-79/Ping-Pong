@@ -1,0 +1,12 @@
+frontend/dist/
+.DS_Store
+node_modules
+backend/volume
+backend/backend/.env
+node_modules
+backend/__pycache__
+__pycache__/
+*.pyc
+*/migrations/*.pyc
+backend/media/profile_pictures/*.png    
+

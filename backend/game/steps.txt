@@ -1,0 +1,23 @@
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+/Users/m/Desktop/gameDjango/venv/bin/python3 -m pip install --upgrade pip
+django-admin startproject pongGame
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000
+
+https://localhost/auth/signup/
+
+{
+    "user_name" : "aicha",
+    "password" : "passworddd",
+    "email" : "aicha@gmail.com",
+    "first_name" : "aicha",
+    "last_name" : "atki",
+    "language" : "english"
+}
+
+docker exec -it backend-my-postgres-1 psql -U postgres -d postgres
+SELECT username, email, first_name, last_name FROM my_shared_models_user ;
+SELECT * FROM my_shared_models_profile; 
+docker rmi $(docker images | head -n 6 | tail -n 5 | awk '{print $3}')

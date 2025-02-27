@@ -1,0 +1,5 @@
+setup.py
+my_shared_models.egg-info/PKG-INFO
+my_shared_models.egg-info/SOURCES.txt
+my_shared_models.egg-info/dependency_links.txt
+my_shared_models.egg-info/top_level.txt

@@ -1,0 +1,7 @@
+Django
+pillow
+daphne
+channels
+django-cleanup
+django-allauth
+django-htmx

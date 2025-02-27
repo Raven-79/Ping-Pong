@@ -1,0 +1,22 @@
+<!-- templates/tournaments/tournament_list.html -->
+<h1>Tournament List</h1>
+<ul>
+    
+    {% for tournament in tournaments %}
+        <li>
+            <strong>{{ tournament.name }}</strong> - {{ tournament.max_players }} players
+            <ul>
+                {% for participant in tournament.participants.all %}
+                    <li>{{ participant.user.username }}</li>  <!-- Display each participant's username -->
+                {% empty %}
+                    <li>No participants yet</li>  <!-- Display if no participants have joined -->
+                {% endfor %}
+            </ul>
+            <ul>
+                {% for match in tournament.matches.all %}
+                    <li>{{ match.player1.user.username }} vs {{ match.player2.user.username }}</li>
+                {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+</ul>

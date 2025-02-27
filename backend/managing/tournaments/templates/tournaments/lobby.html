@@ -1,0 +1,21 @@
+<!-- templates/tournaments/lobby.html -->
+<h1>{{ tournament.name }} Lobby</h1>
+<p>Waiting for players... {{ participants.count }} / {{ tournament.max_players }}</p>
+
+<ul>
+    {% for participant in participants %}
+        <li>{{ participant.user.username }}</li>
+    {% endfor %}
+</ul>
+
+{% if ready_to_start %}
+    <p>The tournament is ready to start! Redirecting to matches...</p>
+    <script>
+        // Automatically redirect to the matches page when ready
+        setTimeout(function() {
+            window.location.href = "{% url 'start_tournament' tournament.id %}";
+        }, 2000);
+    </script>
+{% else %}
+    <p>Waiting for more players to join...</p>
+{% endif %}

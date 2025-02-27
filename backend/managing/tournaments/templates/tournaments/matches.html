@@ -1,0 +1,30 @@
+<h1>Matches for {{ tournament.name }}</h1>
+
+
+{% if rounds %}
+
+    {% for round, matches_in_round in rounds.items %}
+        <h2>Round {{ round }}</h2>
+        <ul>
+            {% for match in matches_in_round %}
+                <li>
+                    Match {{ forloop.counter }}: 
+                    <strong>{{ match.player1.user.username }}</strong> vs 
+                    <strong>{{ match.player2.user.username }}</strong> - 
+                    Status: {{ match.get_status_display }}
+
+                    {% if match.status != 'completed' %}
+                        <form method="post" action="{% url 'complete_match' match.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Complete Match</button>
+                        </form>
+                    {% else %}
+                        Winner: {{ match.winner.user.username }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% else %}
+    <p>No matches have been created yet.</p>
+{% endif %}

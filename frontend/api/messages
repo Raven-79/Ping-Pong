@@ -1,0 +1,37 @@
+[
+    {
+        "id": "1",
+        "name": "Youness",
+        "lastMessage": "Iloveuu <3. but wlah la5ditihom",
+        "sentAt": "Fri Dec 06 2024 00:00:00 GMT+0100 (GMT+01:00)",
+        "unreadCount": 1
+    },
+    {
+        "id": "2",
+        "name": "Sarah",
+        "lastMessage": "Don't forget our meeting tomorrow.",
+        "sentAt": "Thu Dec 05 2024 15:45:00 GMT+0100 (GMT+01:00)",
+        "unreadCount": 3
+    },
+    {
+        "id": "3",
+        "name": "Michael",
+        "lastMessage": "Can you send me the report?",
+        "sentAt": "Wed Dec 04 2024 09:30:00 GMT+0100 (GMT+01:00)",
+        "unreadCount": 2
+    },
+    {
+        "id": "4",
+        "name": "Emily",
+        "lastMessage": "Had a great time last night!",
+        "sentAt": "Tue Dec 03 2024 22:15:00 GMT+0100 (GMT+01:00)",
+        "unreadCount": 0
+    },
+    {
+        "id": "5",
+        "name": "David",
+        "lastMessage": "Let's catch up soon.",
+        "sentAt": "Mon Dec 02 2024 14:00:00 GMT+0100 (GMT+01:00)",
+        "unreadCount": 5
+    }
+]
